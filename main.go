@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
-	"github.com/kvasirlabs/gourmet"
+	"github.com/gourmetproject/gourmet"
 )
 
 type SOA struct {

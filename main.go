@@ -56,7 +56,7 @@ func (d *DNS) Key() string {
 
 type dnsAnalyzer struct{}
 
-func NewAnalyzer() *dnsAnalyzer {
+func NewAnalyzer() gourmet.Analyzer {
 	return &dnsAnalyzer{}
 }
 

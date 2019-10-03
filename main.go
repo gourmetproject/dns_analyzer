@@ -3,56 +3,9 @@ package main
 import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
+	"github.com/gourmetproject/dnsanalyzer/dnsresult"
 	"github.com/gourmetproject/gourmet"
 )
-
-type SOA struct {
-	MName   string
-	RName   string
-	Serial  uint32
-	Refresh uint32
-	Retry   uint32
-	Expire  uint32
-	// new RFC renames MINIMUM to TTL, so we will too
-	TTL     uint32
-}
-
-type Question struct {
-	Name  string
-	Type  string
-	Class string
-}
-
-type Record struct {
-	Name  string
-	Type  string
-	Class string
-	TTL   uint32
-	Data  string   `json:"omitempty"`
-	IP    string   `json:"omitempty"`
-	NS    string   `json:"omitempty"`
-	CNAME string   `json:"omitempty"`
-	PTR   string   `json:"omitempty"`
-	TXT   []string `json:"omitempty"`
-	SOA            `json:"omitempty"`
-}
-
-type DNS struct {
-	ID                  uint16
-	QR                  bool
-	OpCode              string
-	AA                  bool
-	TC                  bool
-	ResponseCode        string
-	Questions           []Question
-	Answers             []Record
-	Authorities         []Record
-	Additionals         []Record
-}
-
-func (d *DNS) Key() string {
-	return "dns"
-}
 
 type dnsAnalyzer struct{}
 
@@ -68,7 +21,7 @@ func (ha *dnsAnalyzer) Filter(c *gourmet.Connection) bool {
 }
 
 func (ha *dnsAnalyzer) Analyze(c *gourmet.Connection) (gourmet.Result, error) {
-	d := &DNS{}
+	d := &dnsresult.DNS{}
 	var dns layers.DNS
 	var decoded []gopacket.LayerType
 	parser := gopacket.NewDecodingLayerParser(layers.LayerTypeDNS, &dns)
@@ -84,8 +37,8 @@ func (ha *dnsAnalyzer) Analyze(c *gourmet.Connection) (gourmet.Result, error) {
 	return d, nil
 }
 
-func newDnsResult(parsedDNS layers.DNS) (d *DNS) {
-	d = &DNS{}
+func newDnsResult(parsedDNS layers.DNS) (d *dnsresult.DNS) {
+	d = &dnsresult.DNS{}
 	d.ID = parsedDNS.ID
 	d.QR = parsedDNS.QR
 	d.OpCode = parsedDNS.OpCode.String()
@@ -99,28 +52,28 @@ func newDnsResult(parsedDNS layers.DNS) (d *DNS) {
 	return d
 }
 
-func newDNSQuestions(parsedDNS layers.DNS) (dnsQuestions []Question) {
+func newDNSQuestions(parsedDNS layers.DNS) (dnsQuestions []dnsresult.Question) {
 	for _, question := range parsedDNS.Questions {
 		dnsQuestions = append(dnsQuestions, newDnsQuestion(question))
 	}
 	return dnsQuestions
 }
 
-func newDnsQuestion(question layers.DNSQuestion) (dnsQuestion Question) {
+func newDnsQuestion(question layers.DNSQuestion) (dnsQuestion dnsresult.Question) {
 	dnsQuestion.Name = string(question.Name)
 	dnsQuestion.Class = question.Class.String()
 	dnsQuestion.Type = question.Type.String()
 	return dnsQuestion
 }
 
-func newDNSRecords(records []layers.DNSResourceRecord) (dnsRecords []Record) {
+func newDNSRecords(records []layers.DNSResourceRecord) (dnsRecords []dnsresult.Record) {
 	for _, record := range records {
 		dnsRecords = append(dnsRecords, newDnsRecord(record))
 	}
 	return dnsRecords
 }
 
-func newDnsRecord(record layers.DNSResourceRecord) (dnsRecord Record) {
+func newDnsRecord(record layers.DNSResourceRecord) (dnsRecord dnsresult.Record) {
 	dnsRecord.Name = string(record.Name)
 	dnsRecord.Type = record.Type.String()
 	dnsRecord.Class = record.Class.String()
@@ -143,7 +96,7 @@ func convertDNSTXTToStrings(txtBytes [][]byte) (txtStrings[]string) {
 	return txtStrings
 }
 
-func newDnsSOA(soa layers.DNSSOA) (dnsSOA SOA) {
+func newDnsSOA(soa layers.DNSSOA) (dnsSOA dnsresult.SOA) {
 	dnsSOA.MName = string(soa.MName)
 	dnsSOA.RName = string(soa.RName)
 	dnsSOA.Expire = soa.Expire

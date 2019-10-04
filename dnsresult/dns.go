@@ -45,5 +45,5 @@ type DNS struct {
 }
 
 func (d *DNS) Key() string {
-	return "dnsresult"
+	return "dns"
 }
